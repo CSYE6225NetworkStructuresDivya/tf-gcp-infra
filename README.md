@@ -1,2 +1,5 @@
 # tf-gcp-infra
-Terraform setup
+#### Terraform setup commands
+* terraform init
+* terraform plan
+* terraform apply
