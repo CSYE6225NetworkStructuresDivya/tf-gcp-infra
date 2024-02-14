@@ -1,13 +1,13 @@
 variable "project_id" {
   description = "ID of the project in which to create resources"
   type        = string
-  default     = "quiet-being-408814"
+  default     = "cloud-csye-6225"
 }
 
 variable "credentials_file" {
   description = "Path to the service account key file"
   type        = string
-  default     = "../quiet-being-408814-43805bdcb2a7.json"
+  default     = "../cloud-csye-6225-a49ce1dc3138.json"
 }
 
 variable "vpc_name" {
