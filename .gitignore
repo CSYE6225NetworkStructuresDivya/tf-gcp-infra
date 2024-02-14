@@ -1,4 +1,6 @@
 .idea
+.DS_Store
+cloud-csye-6225-a49ce1dc3138.json
 # Local .terraform directories
 **/.terraform/*
 
