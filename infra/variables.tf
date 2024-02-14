@@ -10,6 +10,12 @@ variable "credentials_file" {
   default     = "../quiet-being-408814-43805bdcb2a7.json"
 }
 
+variable "vpc_name" {
+  description = "The name of the VPC network"
+  type        = list(string)
+  default     = ["cloud-vpc"]
+}
+
 variable "region" {
   description = "The region in which to create resources"
   type        = string
