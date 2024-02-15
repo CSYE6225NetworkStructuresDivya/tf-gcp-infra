@@ -5,6 +5,7 @@ resource "google_compute_network" "vpc_name" {
   }
   name = each.key
   auto_create_subnetworks = false
+  routing_mode = "REGIONAL"
   delete_default_routes_on_create = true
 }
 
