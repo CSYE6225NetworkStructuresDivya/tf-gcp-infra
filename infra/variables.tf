@@ -4,12 +4,6 @@ variable "project_id" {
   default     = "cloud-csye-6225"
 }
 
-variable "credentials_file" {
-  description = "Path to the service account key file"
-  type        = string
-  default     = "../cloud-csye-6225-a49ce1dc3138.json"
-}
-
 variable "vpc_name" {
   description = "The name of the VPC network"
   type        = list(string)
