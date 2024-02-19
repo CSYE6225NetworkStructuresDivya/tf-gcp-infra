@@ -14,7 +14,7 @@ resource "google_compute_subnetwork" "webapp" {
   for_each = google_compute_network.vpc_name
   name          = "${each.key}-webapp"
   ip_cidr_range = var.webapp_ip_cidr_range
-  region        = var.region
+  region        = var.regio
   network       = each.value.self_link
 }
 
