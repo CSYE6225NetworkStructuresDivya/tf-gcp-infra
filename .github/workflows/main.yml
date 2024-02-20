@@ -19,7 +19,11 @@ jobs:
           terraform_version: 1.0.8
 
       - name: Terraform Init
-        run: terraform init
+        run: |
+          cd infra
+          terraform init
 
       - name: Terraform Validate
-        run: terraform validate
+        run: |
+          cd infra
+          terraform validate
