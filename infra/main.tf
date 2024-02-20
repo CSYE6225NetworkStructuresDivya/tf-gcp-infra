@@ -23,7 +23,7 @@ resource "google_compute_subnetwork" "db" {
   for_each = google_compute_network.vpc_name
   name          = "${each.key}-db"
   ip_cidr_range = var.db_ip_cidr_range
-  region        = var.region
+  region        = var.reg
   network       = each.value.self_link
 }
 
