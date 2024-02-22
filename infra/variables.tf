@@ -52,9 +52,15 @@ variable "webapp_route_next_hop_gateway" {
   default     = "default-internet-gateway"
 }
 
-variable "image_url" {
-  description = "The URL of the image to use for the VM"
+variable "machine_type" {
+  description = "The machine type to use for the VM"
   type        = string
-  default     = "https://console.cloud.google.com/compute/imagesDetail/projects/ml-images/global/images/c0-deeplearning-common-cpu-v20230925-debian-10?project=cloud-csye-6225"
+  default     = "n2-standard-2"
+}
+
+variable "image_name" {
+    description = "The name of the image to use for the VM"
+    type        = string
+    default     = "c0-deeplearning-common-cpu-v20230925-debian-10"
 }
 

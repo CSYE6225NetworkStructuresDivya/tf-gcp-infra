@@ -66,11 +66,11 @@ resource "google_compute_instance" "web_instance" {
   for_each = google_compute_network.vpc_name
 
   name         = "webapp-instance-${each.key}"
-  machine_type = "n2-standard-2"
+  machine_type = var.machine_type
   zone         = var.zone
   boot_disk {
     initialize_params {
-        image = "packer-1708561488"
+        image = var.image_name
         type = "pd-balanced"
         size  = "100"
     }
