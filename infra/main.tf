@@ -5,7 +5,7 @@ resource "google_compute_network" "vpc_name" {
   }
   name = each.key
   auto_create_subnetworks = false
-  routing_mode = "REGIONAL"
+  routing_mode = var.routing_mode
   delete_default_routes_on_create = true
 }
 
@@ -34,4 +34,50 @@ resource "google_compute_route" "webapp_route" {
     network               = each.value.self_link
     dest_range            = var.webapp_destination_ip_range
     next_hop_gateway      = var.webapp_route_next_hop_gateway
+}
+
+# Create firewall rules
+resource "google_compute_firewall" "allow_webapp_traffic" {
+  for_each = google_compute_network.vpc_name
+
+  name        = "allow-webapp-traffic-${each.key}"
+  network     = each.value.self_link
+  allow {
+    protocol = "tcp"
+    ports    = ["8080"]
+  }
+  source_ranges = ["0.0.0.0/0"]
+}
+
+resource "google_compute_firewall" "deny_ssh" {
+  for_each = google_compute_network.vpc_name
+
+  name        = "deny-ssh-${each.key}"
+  network     = each.value.self_link
+  deny {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+  source_ranges = ["0.0.0.0/0"]
+}
+
+# Create compute engine instance
+resource "google_compute_instance" "web_instance" {
+  for_each = google_compute_network.vpc_name
+
+  name         = "webapp-instance-${each.key}"
+  machine_type = "n2-standard-2"
+  zone         = var.zone
+  boot_disk {
+    initialize_params {
+        image = "packer-1708561488"
+        type = "pd-balanced"
+        size  = "100"
+    }
+  }
+  network_interface {
+    subnetwork = google_compute_subnetwork.webapp[each.key].self_link
+    network = google_compute_network.vpc_name[each.key].self_link
+    access_config {}
+  }
 }
