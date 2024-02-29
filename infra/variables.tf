@@ -40,6 +40,12 @@ variable "db_ip_cidr_range" {
   default     = "10.2.0.0/24"
 }
 
+variable "private_service_ip" {
+    description = "The IP CIDR range for the google private services"
+    type        = string
+    default     = "10.3.0.0"
+}
+
 variable "webapp_destination_ip_range" {
   description = "The destination IP range for the webapp route"
   type        = string
@@ -61,6 +67,28 @@ variable "machine_type" {
 variable "image_name" {
     description = "The name of the image to use for the VM"
     type        = string
-    default     = "c0-deeplearning-common-cpu-v20230925-debian-10"
+    default     = "packer-1709133046"
 }
+
+variable "cloudsql_configuration" {
+    description = "The configurations for the Cloud SQL instance"
+    type = object({
+        delete_protection = bool
+        availability_type = string
+        disk_type = string
+        disk_size = number
+        ipv4_enabled = bool
+        tier = string
+    })
+    default = {
+        delete_protection = false
+        availability_type = "REGIONAL"
+        disk_type = "PD_SSD"
+        disk_size = 100
+        ipv4_enabled = false
+        tier = "db-f1-micro"
+    }
+}
+
+
 
