@@ -122,6 +122,48 @@ resource "google_compute_instance" "web_instance" {
     access_config {}
   }
   metadata_startup_script = local.startup_scripts[each.key]
+
+  service_account {
+    email  = google_service_account.service_account.email
+    scopes = ["logging-write", "monitoring"]
+  }
+}
+
+############################# Create Service Account ##############################
+resource "google_service_account" "service_account" {
+    account_id   = "logging-monitoring-sa"
+    display_name = "Observability Service Account"
+}
+
+# Bind the service account to Logging Admin role
+resource "google_project_iam_binding" "logging_admin_role"  {
+  project = var.project_id
+  role    = "roles/logging.admin"
+  members = ["serviceAccount:${google_service_account.service_account.email}"]
+}
+
+# Bind the service account to Monitoring Metric Writer role
+resource "google_project_iam_binding" "monitoring_metric_writer_role" {
+  project = var.project_id
+  role    = "roles/monitoring.metricWriter"
+  members = ["serviceAccount:${google_service_account.service_account.email}"]
+}
+
+############################## Cloud DNS setup ##############################
+resource "google_dns_record_set" "a" {
+  for_each = {
+    for index, name in var.vpc_name : index  => name
+  }
+  name         = var.domain_name
+  managed_zone = var.hosted_zone_name
+  type         = "A"
+  ttl          = 60
+
+  rrdatas = flatten([
+    for instance in google_compute_instance.web_instance : [
+      instance.network_interface.0.access_config.0.nat_ip
+    ]
+  ])
 }
 
 ############################## Cloud SQL setup ##############################

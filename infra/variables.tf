@@ -90,5 +90,17 @@ variable "cloudsql_configuration" {
     }
 }
 
+variable "hosted_zone_name" {
+    description = "The name of the DNS zone"
+    type        = string
+    default     = "csye6225assignment"
+}
+
+variable "domain_name" {
+    description = "The name of the host"
+    type        = string
+    default     = "divyashree.me."
+}
+
 
 
