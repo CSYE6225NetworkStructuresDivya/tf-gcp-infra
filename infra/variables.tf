@@ -61,7 +61,7 @@ variable "webapp_route_next_hop_gateway" {
 variable "machine_type" {
   description = "The machine type to use for the VM"
   type        = string
-  default     = "n2-standard-2"
+  default     = "e2-medium"
 }
 
 variable "image_name" {
@@ -86,7 +86,9 @@ variable "cloudsql_configuration" {
         disk_type = "PD_SSD"
         disk_size = 100
         ipv4_enabled = false
-        tier = "db-f1-micro"
+      //tier = "db-f1-micro"
+      //tier = "db-g1-small"
+      tier = "db-custom-1-3840"
     }
 }
 

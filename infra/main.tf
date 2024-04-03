@@ -37,9 +37,11 @@ resource "google_compute_firewall" "allow_webapp_traffic" {
   network     = google_compute_network.vpc_name.self_link
   allow {
     protocol = "tcp"
-    ports    = ["8080", "22"]
+    ports    = ["8080", "22", "443"]
   }
-  source_ranges = ["0.0.0.0/0"]
+  #source_ranges = ["0.0.0.0/0"]
+  source_ranges = ["35.191.0.0/16", "130.211.0.0/22"]
+  target_tags = ["webapp"]
 }
 
 #resource "google_compute_firewall" "deny_ssh" {
@@ -85,33 +87,6 @@ resource "google_service_networking_connection" "private_vpc_connection" {
   reserved_peering_ranges = [google_compute_global_address.private_services_ips.name]
 }
 
-############################## Compute engine ##############################
-
-# Create compute engine instance
-resource "google_compute_instance" "web_instance" {
-  name         = "webapp-instance"
-  machine_type = var.machine_type
-  zone         = var.zone
-  boot_disk {
-    initialize_params {
-      image = var.image_name
-      type = "pd-balanced"
-      size  = "100"
-    }
-  }
-  network_interface {
-    subnetwork = google_compute_subnetwork.webapp.self_link
-    network = google_compute_network.vpc_name.self_link
-    access_config {}
-  }
-  metadata_startup_script = local.startup_script
-
-  service_account {
-    email  = google_service_account.service_account.email
-    scopes = ["logging-write", "monitoring", "pubsub"]
-  }
-}
-
 ############################# Create Service Account ##############################
 resource "google_service_account" "service_account" {
     account_id   = "logging-monitoring-sa"
@@ -137,16 +112,6 @@ resource "google_project_iam_binding" "pubsub_publisher_role" {
   project = var.project_id
   role    = "roles/pubsub.publisher"
   members = ["serviceAccount:${google_service_account.service_account.email}"]
-}
-
-############################## Cloud DNS setup ##############################
-resource "google_dns_record_set" "a" {
-  name         = var.domain_name
-  managed_zone = var.hosted_zone_name
-  type         = "A"
-  ttl          = 60
-
-  rrdatas = [google_compute_instance.web_instance.network_interface.0.access_config.0.nat_ip]
 }
 
 ############################## Cloud SQL setup ##############################
