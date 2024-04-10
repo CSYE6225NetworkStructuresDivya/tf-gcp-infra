@@ -39,7 +39,7 @@ resource "google_compute_firewall" "allow_webapp_traffic" {
     protocol = "tcp"
     ports    = ["8080", "22", "443"]
   }
-  #source_ranges = ["0.0.0.0/0"]
+
   source_ranges = ["35.191.0.0/16", "130.211.0.0/22"]
   target_tags = ["webapp"]
 }
@@ -114,6 +114,13 @@ resource "google_project_iam_binding" "pubsub_publisher_role" {
   members = ["serviceAccount:${google_service_account.service_account.email}"]
 }
 
+#Bind the service account to cloudkms encrypter/decrypter role
+resource "google_project_iam_binding" "cloudkms_encrypter_decrypter_role" {
+  project = var.project_id
+  role    = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+  members = ["serviceAccount:${google_service_account.service_account.email}"]
+}
+
 ############################## Cloud SQL setup ##############################
 
 resource "google_sql_database_instance" "mysql_instance" {
@@ -136,6 +143,7 @@ resource "google_sql_database_instance" "mysql_instance" {
     }
   }
   depends_on = [google_compute_subnetwork.db, google_service_networking_connection.private_vpc_connection]
+  encryption_key_name = google_kms_crypto_key.cloud_sql_key.id
 }
 
 resource "google_sql_database" "mysql_db" {
@@ -147,8 +155,9 @@ resource "google_sql_database" "mysql_db" {
 
 resource "random_password" "password" {
   length           = 8
-  special          = true
-  override_special = "!#$%&*()-_=+[]{}<>:?"
+  special          = false
+  upper            = true
+  lower            = true
 }
 
 resource "random_string" "random_string" {
@@ -181,6 +190,24 @@ resource "google_pubsub_topic" "verify_email_topic" {
   name = "verify_email"
 }
 
+resource "google_storage_bucket" "serverless_storage_bucket" {
+  name     = "serverless-function-bucket"
+  location = var.region
+  force_destroy = true
+  encryption {
+    default_kms_key_name = google_kms_crypto_key.storage_bucket_key.id
+  }
+  depends_on = [google_kms_crypto_key_iam_binding.storage_bucket_key_iam_binding]
+}
+
+resource "google_storage_bucket_object" "serverless_zip_object" {
+  name   = "serverless-function-bucket-object"
+  bucket = google_storage_bucket.serverless_storage_bucket.name
+  source = "serverless.zip"
+
+  depends_on = [google_storage_bucket.serverless_storage_bucket]
+}
+
 resource "google_cloudfunctions2_function" "send_email" {
     name = "verify_email"
     location = var.region
@@ -191,8 +218,8 @@ resource "google_cloudfunctions2_function" "send_email" {
 
       source {
         storage_source {
-          bucket = "serverless-function-bucket"
-          object = "serverless.zip"
+          bucket = google_storage_bucket.serverless_storage_bucket.name
+          object = google_storage_bucket_object.serverless_zip_object.name
         }
       }
     }
