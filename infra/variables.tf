@@ -86,9 +86,7 @@ variable "cloudsql_configuration" {
         disk_type = "PD_SSD"
         disk_size = 100
         ipv4_enabled = false
-      //tier = "db-f1-micro"
-      //tier = "db-g1-small"
-      tier = "db-custom-1-3840"
+        tier = "db-custom-1-3840"
     }
 }
 
@@ -104,5 +102,38 @@ variable "domain_name" {
     default     = "divyashree.me."
 }
 
+variable "key_ring_name" {
+    description = "The name of the key ring"
+    type        = string
+    default     = "kms-key-ring-test6"
+}
 
+variable "vm_instance_key_name" {
+    description = "The name of the key to use for the VM instance"
+    type        = string
+    default     = "vm-instance-key-test6"
+}
 
+variable "cloud_sql_key_name" {
+    description = "The name of the key to use for the Cloud SQL instance"
+    type        = string
+    default     = "cloud-sql-key-test6"
+}
+
+variable "storage_bucket_key_name" {
+  description = "The name of the key to use for the storage bucket"
+  type        = string
+  default     = "storage-bucket-key-test6"
+}
+
+variable "key_rotation_period" {
+    description = "The rotation period for the key"
+    type        = string
+    default     = "2592000s" #(30 days)
+}
+
+variable "key_destroy_scheduled_duration" {
+    description = "The scheduled duration for the key to be destroyed"
+    type        = string
+    default     = "86400s"
+}

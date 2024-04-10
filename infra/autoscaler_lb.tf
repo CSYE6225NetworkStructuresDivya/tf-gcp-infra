@@ -9,7 +9,11 @@ resource "google_compute_region_instance_template" "webapp_instance_template" {
     source_image = var.image_name
     auto_delete = true
     type = "pd-balanced"
-    disk_size_gb = 100
+    disk_size_gb = 50
+
+    disk_encryption_key {
+      kms_key_self_link = google_kms_crypto_key.vm_instance_key.id
+    }
   }
 
   network_interface {
@@ -20,10 +24,16 @@ resource "google_compute_region_instance_template" "webapp_instance_template" {
 
   service_account {
     email = google_service_account.service_account.email
-    scopes = ["logging-write", "monitoring", "pubsub"]
+    scopes = [
+      "https://www.googleapis.com/auth/logging.write",
+      "https://www.googleapis.com/auth/monitoring",
+      "https://www.googleapis.com/auth/pubsub",
+      "https://www.googleapis.com/auth/cloudkms",
+    ]
   }
 
   tags = ["webapp"]
+  depends_on = [google_kms_crypto_key.vm_instance_key, google_service_account.service_account, google_kms_key_ring.key_ring]
 
   metadata_startup_script = local.startup_script
 }
@@ -33,20 +43,18 @@ resource "google_compute_region_instance_group_manager" "webapp_instance_group_m
   base_instance_name = "webapp-instance"
   region = var.region
 
-  distribution_policy_zones = ["us-east1-b", "us-east1-c", "us-east1-d"]
+  distribution_policy_zones = ["us-east1-c", "us-east1-d"]
 
   version {
     instance_template = google_compute_region_instance_template.webapp_instance_template.self_link
   }
-
   named_port {
     name = "port-name-webapp"
     port = 8080
   }
-
   auto_healing_policies {
     health_check      = google_compute_region_health_check.webapp_health_check.id
-    initial_delay_sec = 180
+    initial_delay_sec = 300
   }
 }
 
@@ -54,7 +62,7 @@ resource "google_compute_region_health_check" "webapp_health_check" {
   name = "webapp-health-check"
   description = "Health check via http"
 
-  timeout_sec = 1
+  timeout_sec = 10
   check_interval_sec = 20
 
   http_health_check {
@@ -73,8 +81,8 @@ resource "google_compute_region_autoscaler" "webapp_autoscaler" {
   target = google_compute_region_instance_group_manager.webapp_instance_group_manager.self_link
 
   autoscaling_policy {
-    max_replicas = 6
-    min_replicas = 3
+    max_replicas = 3
+    min_replicas = 1
     cooldown_period = 180
 
     cpu_utilization {
